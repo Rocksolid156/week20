@@ -1,6 +1,7 @@
 package net.rsolid;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,29 +10,32 @@ import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 
 public class Frontend {
-    ShowWindow sw;
+    private final ShowWindow sw;
     private GetConnection sqlconn;
     private RunStatement command;
     private String URL;
     private final JLabel connectStatus;
     private int SQLstatus;
-    private DrawInfo infoWindow;
+    private DefaultTableModel tableModel1;
+
+    private int mode=1; //用于标识是否首次绘图JTable
 
     public Frontend() {
         sw = new ShowWindow();
-        this.AddListener();
+        this.AddOnetimeListener();
         connectStatus = new JLabel();
         sw.cd.add(connectStatus);
-        this.SetContent();
     }
 
     public void GenURL(String domain, String user, String pwd) {
         this.URL = "jdbc:mysql://" + domain + "/experiment2?user=" + user + "&password=" + pwd + "&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true";
     }
 
-    private void AddListener() {
+    private void AddOnetimeListener() {
         ShowWindow.CredentialsDialog infodialog = sw.cd;
         ShowWindow.InitDBDialog initdialog = sw.idb;
+        ShowWindow.InputDialog inputDialog= sw.ipd;
+
         sw.mi1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -44,8 +48,9 @@ public class Frontend {
                 try {
                     sqlconn.CloseConn();
                     SQLstatus = 0;
-                    sw.setEnable(SQLstatus);
+                    sw.setCloseButtonEnable(SQLstatus);
                     connectStatus.setVisible(false);
+                    refreshUI(mode,SQLstatus);
                     System.out.println("数据库已关闭连接");
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
@@ -101,6 +106,8 @@ public class Frontend {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //TODO
+                sw.ipd=sw.new InputDialog(tableModel1);
+                addInputDialogListener();
             }
         });
         sw.fi2.addActionListener(new ActionListener() {
@@ -169,22 +176,64 @@ public class Frontend {
                 sw.idb.EnablePrepared(chkAllDB(SQLstatus));
             }
         });
-        sw.idb.delButton.addActionListener(new ActionListener() {
+        sw.idb.resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    command = new RunStatement(sqlconn.getConn());
-                    command.removeDB();
-                    sw.idb.EnablePrepared(chkAllDB(SQLstatus));
-                } catch (SQLException ex) {
-                    throw new RuntimeException();
+                int choice = JOptionPane.showConfirmDialog(sw, "确认重置信息管理系统吗？\n所有的数据将丢失！", "确认", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (choice==JOptionPane.YES_OPTION) {
+                    try {
+                        command = new RunStatement(sqlconn.getConn());
+                        command.removeDB();
+                        sw.idb.EnablePrepared(chkAllDB(SQLstatus));
+                    } catch (SQLException ex) {
+                        throw new RuntimeException();
+                    }
                 }
             }
         });
-        sw.avi1.addActionListener(new ActionListener() {
+        sw.qi1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                tryDraw("med");
+            }
+        });
+        sw.qi2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tryDraw("department");
+            }
+        });
+        sw.qi3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tryDraw("doc");
+            }
+        });
+        sw.qi4.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tryDraw("patient");
+            }
+        });
+        sw.qi5.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tryDraw("prescription");
+            }
+        });
+        sw.qi6.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tryDraw("billing");
+            }
+        });
+    }
 
+    private void addInputDialogListener(){
+        sw.ipd.closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd.setVisible(false);
             }
         });
     }
@@ -221,14 +270,14 @@ public class Frontend {
     public boolean chkAllDB(int status) {
         if (status == 1) {
             try {
-                boolean medicineExists = command.checkExist("med");
-                boolean importExists = command.checkExist("imp");
-                boolean exportExists = command.checkExist("export");
-                boolean departmentExists = command.checkExist("department");
-                boolean docExists = command.checkExist("doc");
-                boolean patientExists = command.checkExist("patient");
-                boolean prescriptionExists = command.checkExist("prescription");
-                boolean billingExists = command.checkExist("billing");
+                boolean medicineExists = command.checkExists("med",1);
+                boolean importExists = command.checkExists("imp",1);
+                boolean exportExists = command.checkExists("export",1);
+                boolean departmentExists = command.checkExists("department",1);
+                boolean docExists = command.checkExists("doc",1);
+                boolean patientExists = command.checkExists("patient",1);
+                boolean prescriptionExists = command.checkExists("prescription",1);
+                boolean billingExists = command.checkExists("billing",1);
 
                 sw.idb.checkBox0.setSelected(medicineExists);
                 sw.idb.checkBox1.setSelected(importExists);
@@ -243,9 +292,14 @@ public class Frontend {
                         command.checkTrigger("export_autoupdate");
                 sw.idb.checkBox8.setSelected(triggerExists);
 
+                boolean procedureExists=command.checkExists("stats",2);
+                boolean viewExists=command.checkExists("medicine_stock",3);
+                sw.idb.checkBox9.setSelected(procedureExists);
+                sw.idb.checkBox10.setSelected(viewExists);
+
                 return medicineExists&&importExists&&exportExists&&departmentExists&&docExists&&patientExists&&prescriptionExists
-                        &&billingExists&triggerExists;
-            } catch (SQLException ex) {
+                        &&billingExists&triggerExists&procedureExists&viewExists;
+            } catch (SQLException ex) { //TODO
                 throw new RuntimeException(ex);
             }
 
@@ -255,13 +309,46 @@ public class Frontend {
 
     private void ConnectDoneFunc() {
         sw.cd.setVisible(false);
-        sw.setEnable(SQLstatus);
+        sw.setCloseButtonEnable(SQLstatus);
         sw.idb.EnablePrepared(chkAllDB(SQLstatus));
     }
 
-    private void SetContent(){
-        infoWindow=new DrawInfo(sw);
+    private void refreshUI(int mode,int status){
+        if (mode==1&&status==1){
+            sw.getContentPane().remove(sw.info.hello);
+            this.mode=2;
+        } else if (mode == 2&&status==1) {
+            sw.getContentPane().remove(sw.info.table1_1);
+        } else if (mode == 2 && status == 0) {
+            this.mode=1;
+            sw.getContentPane().remove(sw.info.table1_1);
+            sw.info.drawHello();
+        }
+        sw.revalidate();
+        sw.repaint();
     }
+
+    private void tryDraw(String tablename){
+        ParseResult result;
+        try {
+            command=new RunStatement(sqlconn.getConn());
+            tableModel1=new DefaultTableModel(){
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            result =new ParseResult(tablename,null,tableModel1, command.getStmt());
+            result.query();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        refreshUI(mode,SQLstatus);
+        mode=sw.info.drawTable1(result.tableModel);
+        sw.revalidate();
+        sw.repaint();
+    }
+
 
     public static void main(String[] args) {
         new Frontend();
@@ -273,11 +360,15 @@ class ShowWindow extends JFrame {
 
     JMenuItem mi1, mi2, mi3;
     JMenuItem fi1, fi2;
-    JMenuItem ai1, ai2, ai3, ai4;
+    JMenuItem ai1, ai3, ai4;
+    JMenu ai2;
+    JMenuItem qi1,qi2,qi3,qi4,qi5,qi6;
     JMenuItem hi1, hi2, hi3;
     JMenuItem avi1;
     CredentialsDialog cd;
     InitDBDialog idb;
+    DrawInfo info;
+    InputDialog ipd;
 
     public ShowWindow() {
         super("Simple DB Query Frontend By 2211110209");
@@ -287,6 +378,8 @@ class ShowWindow extends JFrame {
         this.setVisible(true);
         this.AddMenu();
         this.setLayout(new BorderLayout());
+        info=new DrawInfo(this);
+
         this.revalidate();
         this.repaint();
     }
@@ -302,7 +395,13 @@ class ShowWindow extends JFrame {
         mi3 = new JMenuItem("连接情况");
         JMenu m2 = new JMenu("库");
         ai1 = new JMenuItem("初始化数据库");
-        ai2=new JMenuItem("查询历史就诊数据");
+        ai2=new JMenu("查询数据");
+        qi1=new JMenuItem("查询药品数据");
+        qi2=new JMenuItem("查询科室信息");
+        qi3=new JMenuItem("查询医生数据");
+        qi4=new JMenuItem("查询病人数据");
+        qi5=new JMenuItem("查询处方登记数据");
+        qi6=new JMenuItem("查询收费数据");
         JMenu m3 = new JMenu("帮助");
         hi1 = new JMenuItem("关于");
         mi2.setEnabled(false);
@@ -328,12 +427,15 @@ class ShowWindow extends JFrame {
         m3.add(hi1);
         m4.add(avi1);
 
+        ai2.add(qi1);   ai2.add(qi2);   ai2.add(qi3);   ai2.add(qi4);   ai2.add(qi5);   ai2.add(qi6);
+
         this.setJMenuBar(mb);
         cd = new CredentialsDialog();
         idb = new InitDBDialog();
+//        ipd=new InputDialog();
     }
 
-    public void setEnable(int status) {
+    public void setCloseButtonEnable(int status) {
         if (status == 1) {
             mi2.setEnabled(true);
             mi3.setEnabled(true);
@@ -359,6 +461,8 @@ class ShowWindow extends JFrame {
             }
         }
     }
+
+
 
     protected class CredentialsDialog extends JDialog {
         public JTextField domainField;
@@ -396,7 +500,7 @@ class ShowWindow extends JFrame {
     }
 
     protected class InitDBDialog extends JDialog {
-        public JButton executeButton, refreshButton, closeButton, delButton;
+        public JButton executeButton, refreshButton, closeButton, resetButton;
         public JCheckBox checkBox0, checkBox1, checkBox2, checkBox3, checkBox4, checkBox5, checkBox6, checkBox7, checkBox8, checkBox9, checkBox10;
         public JLabel isPrepared;
 
@@ -449,10 +553,10 @@ class ShowWindow extends JFrame {
             executeButton = new JButton("初始化");
             refreshButton = new JButton("刷新");
             closeButton = new JButton("关闭");
-            delButton = new JButton("重置");
+            resetButton = new JButton("重置");
             buttonpanel.add(executeButton);
             buttonpanel.add(refreshButton);
-            buttonpanel.add(delButton);
+            buttonpanel.add(resetButton);
             buttonpanel.add(closeButton);
             add(buttonpanel, BorderLayout.SOUTH);
 
@@ -466,10 +570,60 @@ class ShowWindow extends JFrame {
         }
 
         public void EnablePrepared(boolean flag){
-            if(flag)
-                this.isPrepared.setVisible(true);
-            else
-                this.isPrepared.setVisible(false);
+            this.isPrepared.setVisible(flag);
+            ShowWindow.this.ai2.setEnabled(flag);
+        }
+    }
+
+    protected class InputDialog extends JDialog{
+        public JLabel tip;
+        public JLabel[] columnName;
+        public JTextField[] input;
+        public JButton submitButton,closeButton;
+        private final DefaultTableModel model;
+
+        public InputDialog(DefaultTableModel model) {
+            this.model = model;
+            showInputDialog();
+        }
+
+        public void showInputDialog(){
+            int count=model.getColumnCount();
+            setLayout(new BorderLayout(10,10));
+
+
+            tip=new JLabel("请输入数值");
+            tip.setHorizontalTextPosition(SwingConstants.CENTER);
+            add(tip,BorderLayout.NORTH);
+
+            JPanel infoPanel=new JPanel();
+            infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+            columnName=new JLabel[count];
+            input=new JTextField[count];
+
+            for (int i=0;i<count;i++){
+                columnName[i]=new JLabel(model.getColumnName(i));
+                input[i]=new JTextField(15);
+
+                infoPanel.add(columnName[i]);
+                infoPanel.add(input[i]);
+            }
+            add(infoPanel,BorderLayout.CENTER);
+
+            JPanel buttonPanel=new JPanel();
+            buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
+            submitButton = new JButton("提交");
+            closeButton = new JButton("关闭");
+            buttonPanel.add(submitButton);
+            buttonPanel.add(closeButton);
+            add(buttonPanel,BorderLayout.SOUTH);
+
+            setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            setResizable(false);
+            pack();
+            setLocationRelativeTo(ShowWindow.this);
+
+            this.setVisible(true);
         }
     }
 

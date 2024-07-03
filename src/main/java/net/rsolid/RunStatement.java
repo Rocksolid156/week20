@@ -17,6 +17,7 @@ public class RunStatement {
                 "  `fname` varchar(25) COMMENT '药品全名',\n" +
                 "  `price` DECIMAL(10,2) COMMENT '价格',\n" +
                 "  `count` int DEFAULT 0 COMMENT '库存',\n" +
+                "  `type`  int DEFAULT 0 COMMENT '类型',\n"+
                 "  PRIMARY KEY (`aname`)\n"+
 //                "  UNIQUE  KEY `aname` (`aname`)"+
                 ")";
@@ -51,7 +52,7 @@ public class RunStatement {
                 "  `fname` VARCHAR (20) COMMENT '患者全名',\n" +
                 "  `doc` VARCHAR (5) COMMENT '主治医师id',\n" +
                 "  `sex` CHAR (6) COMMENT '性别',\n" +
-                "  `intime` DATETIME COMMENT '入院日期',\n" +
+                "  `intime` DATETIME NOT NULL COMMENT '入院日期',\n" +
                 "  `outtime` DATETIME COMMENT '出院日期',\n" +
                 "  FOREIGN KEY (doc) REFERENCES doc(docid)\n" +
                 ");\n";
@@ -94,10 +95,9 @@ public class RunStatement {
                 "END IF;\n" +
                 "END;\n";
 
-
         String procedure="CREATE PROCEDURE stats(IN start_date DATE, IN end_date DATE)\n" +
                 "BEGIN\n" +
-                "    SELECT department.dname, COUNT(patient.patid) AS 就诊人数\n" +
+                "    SELECT department.dname, COUNT(patient.id) AS 就诊人数\n" +
                 "    FROM department\n" +
                 "    JOIN doc ON department.dname = doc.belong\n" +
                 "    JOIN patient ON doc.docid = patient.doc\n" +
@@ -111,9 +111,9 @@ public class RunStatement {
                 "END;\n";
         String view="CREATE VIEW medicine_stock AS\n" +
                 "SELECT fname, SUM(count) AS total_count\n" +
-                "FROM medicine\n" +
+                "FROM med\n" +
                 "GROUP BY aname;\n";
-        String[] precompiled={trigger_in,trigger_out};
+        String[] precompiled={trigger_in,trigger_out,procedure,view};
         for (String tableSQL:tables){
             try {
                 stmt.execute(tableSQL);
@@ -132,9 +132,18 @@ public class RunStatement {
         }
         stmt.close();
     }
-    public boolean checkExist(String tablename) throws SQLException {
+    public boolean checkExists(String name,int type) throws SQLException {
         DatabaseMetaData meta= conn.getMetaData();
-        ResultSet rs=meta.getTables(null,null,tablename,new String[]{"TABLE"});
+        ResultSet rs = null;
+        if(type==1)
+            rs=meta.getTables(null,null,name,new String[]{"TABLE"});
+        else if (type == 2) {
+            rs=meta.getProcedures(null,null,name);
+        } else if (type == 3) {
+            rs=meta.getTables(null,null,name,new String[]{"VIEW"});
+        }else {
+            return false;
+        }
         boolean exists=rs.next();
         rs.close();
         return exists;
@@ -160,7 +169,9 @@ public class RunStatement {
         String drop8="drop table if exists prescription;";
         String drop9_1="drop trigger if exists import_autoupdate;";
         String drop9_2="drop trigger if exists export_autoupdate;";
-        String[] drop={drop1,drop2,drop7,drop8,drop4,drop3,drop6,drop5,drop9_1,drop9_2};
+        String drop10="drop procedure if exists stats";
+        String drop11="drop view if exists medicine_stock";
+        String[] drop={drop1,drop2,drop7,drop8,drop4,drop3,drop6,drop5,drop9_1,drop9_2,drop10,drop11};
         for (String current:drop){
             try {
                 stmt.execute(current);
@@ -169,5 +180,9 @@ public class RunStatement {
                 System.err.println("重置失败："+current+"  错误代码:"+ex.getErrorCode());
             }
         }
+        stmt.close();
+    }
+    public Statement getStmt(){
+        return stmt;
     }
 }
