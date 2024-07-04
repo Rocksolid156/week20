@@ -48,7 +48,7 @@ public class RunStatement {
                 "  FOREIGN KEY (`belong`) REFERENCES `experiment2`.`department` (`dname`)\n" +
                 ");\n";
         String DBpatient="CREATE TABLE `patient` (\n" +
-                "  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '患者id号',\n" +
+                "  `ID` INT PRIMARY KEY AUTO_INCREMENT COMMENT '患者id号',\n" +
                 "  `fname` VARCHAR (20) COMMENT '患者全名',\n" +
                 "  `doc` VARCHAR (5) COMMENT '主治医师id',\n" +
                 "  `sex` CHAR (6) COMMENT '性别',\n" +
@@ -57,16 +57,16 @@ public class RunStatement {
                 "  FOREIGN KEY (doc) REFERENCES doc(docid)\n" +
                 ");\n";
         String DBprescription="CREATE TABLE prescription (\n" +
-                "  id INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                "  ID INT PRIMARY KEY AUTO_INCREMENT,\n" +
                 "  patient_id INT,\n" +
                 "  medicine VARCHAR (10),\n" +
                 "  date DATETIME,\n" +
-                "  total_amount DECIMAL(10, 2),\n" +
+                "  amount int ,\n" +
                 "  FOREIGN KEY (patient_id) REFERENCES patient(id),\n" +
                 "  FOREIGN KEY (medicine) REFERENCES med(aname)\n" +
                 ");\n";
         String DBbilling="CREATE TABLE billing (\n" +
-                "  id INT PRIMARY KEY AUTO_INCREMENT,\n" +
+                "  ID INT PRIMARY KEY AUTO_INCREMENT,\n" +
                 "  patient_id INT,\n" +
                 "  amount DECIMAL(10, 2),\n" +
                 "  date DATETIME,\n" +
@@ -109,11 +109,77 @@ public class RunStatement {
                 "    WHERE export.date BETWEEN start_date AND end_date\n" +
                 "    GROUP BY export.aname;\n" +
                 "END;\n";
-        String view="CREATE VIEW medicine_stock AS\n" +
-                "SELECT fname, SUM(count) AS total_count\n" +
+        String view1="CREATE VIEW medicine_stock AS\n" +
+                "SELECT fname as '药品名', SUM(count) AS '总量'\n" +
                 "FROM med\n" +
                 "GROUP BY aname;\n";
-        String[] precompiled={trigger_in,trigger_out,procedure,view};
+        String view2="CREATE VIEW View_Chinese_Medicine AS\n" +
+                "SELECT \n" +
+                "    aname AS 药品批准文号,\n" +
+                "    fname AS 药品全名,\n" +
+                "    price AS 价格,\n" +
+                "    count AS 库存,\n" +
+                "    type AS 类型\n" +
+                "FROM \n" +
+                "    med;\n";
+        String view3="CREATE VIEW View_Chinese_Department AS\n" +
+                "SELECT \n" +
+                "    dname AS 科室号,\n" +
+                "    fname AS 科室全名\n" +
+                "FROM \n" +
+                "    department;\n";
+        String view4="CREATE VIEW View_Chinese_Import AS\n" +
+                "SELECT \n" +
+                "    ID AS 入库ID,\n" +
+                "    aname AS 药品批准文号,\n" +
+                "    date AS 入库日期,\n" +
+                "    count AS 入库数量\n" +
+                "FROM \n" +
+                "    imp;\n";
+        String view5="CREATE VIEW View_Chinese_Export AS\n" +
+                "SELECT \n" +
+                "    ID AS 出库ID,\n" +
+                "    aname AS 药品批准文号,\n" +
+                "    target AS 出库目标科室,\n" +
+                "    date AS 出库日期,\n" +
+                "    count AS 出库数量\n" +
+                "FROM \n" +
+                "    export;\n";
+        String view6="CREATE VIEW View_Chinese_Doctor AS\n" +
+                "SELECT \n" +
+                "    docid AS 医生ID号,\n" +
+                "    fname AS 医生全名,\n" +
+                "    belong AS 所属科室\n" +
+                "FROM \n" +
+                "    doc;\n";
+        String view7="CREATE VIEW View_Chinese_Patient AS\n" +
+                "SELECT \n" +
+                "    ID AS 患者ID号,\n" +
+                "    fname AS 患者全名,\n" +
+                "    doc AS 主治医师ID,\n" +
+                "    sex AS 性别,\n" +
+                "    intime AS 入院日期,\n" +
+                "    outtime AS 出院日期\n" +
+                "FROM \n" +
+                "    patient;\n";
+        String view8="CREATE VIEW View_Chinese_Prescription AS\n" +
+                "SELECT \n" +
+                "    ID AS 处方ID,\n" +
+                "    patient_id AS 患者ID,\n" +
+                "    medicine AS 药品批准文号,\n" +
+                "    date AS 处方日期,\n" +
+                "    amount AS 处方数量\n" +
+                "FROM \n" +
+                "    prescription;\n";
+        String view9="CREATE VIEW View_Chinese_Billing AS\n" +
+                "SELECT \n" +
+                "    ID AS 账单ID,\n" +
+                "    patient_id AS 患者ID,\n" +
+                "    amount AS 账单金额,\n" +
+                "    date AS 账单日期\n" +
+                "FROM \n" +
+                "    billing;\n";
+        String[] precompiled={trigger_in,trigger_out,procedure,view1,view2,view3,view4,view5,view6,view7,view8,view9};
         for (String tableSQL:tables){
             try {
                 stmt.execute(tableSQL);
@@ -171,6 +237,7 @@ public class RunStatement {
         String drop9_2="drop trigger if exists export_autoupdate;";
         String drop10="drop procedure if exists stats";
         String drop11="drop view if exists medicine_stock";
+//        String drop12="drop view if exists View_Chinese";
         String[] drop={drop1,drop2,drop7,drop8,drop4,drop3,drop6,drop5,drop9_1,drop9_2,drop10,drop11};
         for (String current:drop){
             try {

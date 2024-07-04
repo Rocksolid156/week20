@@ -38,7 +38,6 @@ public class ParseResult {
                 columns[i - 1] = rset.getString(i);
             tableModel.addRow(columns);
         }
-//        rset.close();
-//        stmt.close();
+
     }
 }

@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public class Frontend {
     private final ShowWindow sw;
@@ -102,12 +103,94 @@ public class Frontend {
                 ConnectDoneFunc();
             }
         });
-        sw.fi1.addActionListener(new ActionListener() {
+        sw.ei1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1,command);
+                try {
+                    sw.ipd.showInputDialog(1);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+            }
+        });
+        sw.ei2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //TODO
                 sw.ipd=sw.new InputDialog(tableModel1);
-                addInputDialogListener();
+                try {
+                    sw.ipd.showInputDialog(2);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        sw.ei3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1);
+                try {
+                    sw.ipd.showInputDialog(3);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        sw.ei4.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1,command);
+                try {
+                    sw.ipd.showInputDialog(4);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        sw.ei5.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1,command);
+                try {
+                    sw.ipd.showInputDialog(5);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        sw.ei6.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1,command);
+                try {
+                    sw.ipd.showInputDialog(6);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        sw.ei7.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1,command);
+                try {
+                    sw.ipd.showInputDialog(7);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        sw.ei8.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sw.ipd=sw.new InputDialog(tableModel1,command);
+                try {
+                    sw.ipd.showInputDialog(8);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
         sw.fi2.addActionListener(new ActionListener() {
@@ -194,48 +277,61 @@ public class Frontend {
         sw.qi1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tryDraw("med");
+                tryDraw("View_Chinese_Medicine");
+                sw.setAlleiDisabled();
+                sw.ei3.setEnabled(true);    sw.ei4.setEnabled(true);    sw.ei6.setEnabled(true);
             }
         });
         sw.qi2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tryDraw("department");
+                tryDraw("View_Chinese_Department");
+                sw.setAlleiDisabled();
+                sw.ei2.setEnabled(true);
             }
         });
         sw.qi3.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tryDraw("doc");
+                tryDraw("View_Chinese_Doctor");
+                sw.setAlleiDisabled();
+                sw.ei8.setEnabled(true);
             }
         });
         sw.qi4.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tryDraw("patient");
+                tryDraw("View_Chinese_Patient");
+                sw.setAlleiDisabled();
+                sw.ei7.setEnabled(true);
             }
         });
         sw.qi5.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tryDraw("prescription");
+                tryDraw("View_Chinese_Prescription");
+                sw.setAlleiDisabled();
+                sw.ei1.setEnabled(true);
             }
         });
         sw.qi6.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                tryDraw("billing");
+                tryDraw("View_Chinese_Billing");
+                sw.setAlleiDisabled();
+                sw.ei5.setEnabled(true);
             }
         });
     }
 
     private void addInputDialogListener(){
-        sw.ipd.closeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sw.ipd.setVisible(false);
-            }
-        });
+//        sw.ipd.closeButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                sw.ipd.setVisible(false);
+//            }
+//        });
+
     }
 
     private void InitConn(String addr) {
@@ -269,6 +365,7 @@ public class Frontend {
 
     public boolean chkAllDB(int status) {
         if (status == 1) {
+            //type:1->表  2->存储过程 3->视图
             try {
                 boolean medicineExists = command.checkExists("med",1);
                 boolean importExists = command.checkExists("imp",1);
@@ -293,12 +390,22 @@ public class Frontend {
                 sw.idb.checkBox8.setSelected(triggerExists);
 
                 boolean procedureExists=command.checkExists("stats",2);
-                boolean viewExists=command.checkExists("medicine_stock",3);
+                boolean view1Exists =command.checkExists("medicine_stock",3);
+                boolean transExists1= command.checkExists("View_Chinese_Billing",3);
+                boolean transExists2=command.checkExists("View_Chinese_Department",3);
+                boolean transExists3=command.checkExists("View_Chinese_Doctor",3);
+                boolean transExists4=command.checkExists("View_Chinese_Export",3);
+                boolean transExists5=command.checkExists("View_Chinese_Import",3);
+                boolean transExists6= command.checkExists("View_Chinese_Medicine",3);
+                boolean transExists7=command.checkExists("View_Chinese_Patient",3);
+                boolean transExists8=command.checkExists("View_Chinese_Prescription",3);
+                boolean viewsExists=transExists1&&transExists2&&transExists3&&transExists4&&transExists5&&transExists6
+                        &&transExists7&&transExists8&& view1Exists;
                 sw.idb.checkBox9.setSelected(procedureExists);
-                sw.idb.checkBox10.setSelected(viewExists);
+                sw.idb.checkBox10.setSelected(viewsExists);
 
                 return medicineExists&&importExists&&exportExists&&departmentExists&&docExists&&patientExists&&prescriptionExists
-                        &&billingExists&triggerExists&procedureExists&viewExists;
+                        &&billingExists&triggerExists&procedureExists& viewsExists;
             } catch (SQLException ex) { //TODO
                 throw new RuntimeException(ex);
             }
@@ -349,7 +456,6 @@ public class Frontend {
         sw.repaint();
     }
 
-
     public static void main(String[] args) {
         new Frontend();
     }
@@ -359,7 +465,9 @@ class ShowWindow extends JFrame {
     boolean noCloseFlag = true;
 
     JMenuItem mi1, mi2, mi3;
-    JMenuItem fi1, fi2;
+    JMenu fi1;
+    JMenuItem ei1,ei2,ei3,ei4,ei5,ei6,ei7,ei8;
+    JMenuItem  fi2;
     JMenuItem ai1, ai3, ai4;
     JMenu ai2;
     JMenuItem qi1,qi2,qi3,qi4,qi5,qi6;
@@ -387,7 +495,15 @@ class ShowWindow extends JFrame {
     public void AddMenu() {
         JMenuBar mb = new JMenuBar();
         JMenu m0 = new JMenu("文件");
-        fi1 = new JMenuItem("修改数据");
+        fi1 = new JMenu("添加数据");
+        ei1=new JMenuItem("开药方");
+        ei2=new JMenuItem("编辑当前数据");
+        ei3=new JMenuItem("入库");
+        ei4=new JMenuItem("出库");
+        ei5=new JMenuItem("管理收费");
+        ei6=new JMenuItem("维护药品数据");
+        ei7=new JMenuItem("维护患者数据");
+        ei8=new JMenuItem("维护医生数据");
         fi2 = new JMenuItem("安全退出");
         JMenu m1 = new JMenu("连接");
         mi1 = new JMenuItem("创建新链接");
@@ -428,6 +544,8 @@ class ShowWindow extends JFrame {
         m4.add(avi1);
 
         ai2.add(qi1);   ai2.add(qi2);   ai2.add(qi3);   ai2.add(qi4);   ai2.add(qi5);   ai2.add(qi6);
+        fi1.add(ei1);   fi1.add(ei2);   fi1.add(ei3);   fi1.add(ei4);   fi1.add(ei5);   fi1.add(ei6);   fi1.add(ei7);   fi1.add(ei8);
+        this.setAlleiDisabled();
 
         this.setJMenuBar(mb);
         cd = new CredentialsDialog();
@@ -462,7 +580,10 @@ class ShowWindow extends JFrame {
         }
     }
 
-
+    public void setAlleiDisabled(){
+        ei1.setEnabled(false);  ei2.setEnabled(false);  ei3.setEnabled(false);  ei4.setEnabled(false);
+        ei5.setEnabled(false);  ei6.setEnabled(false);  ei7.setEnabled(false);  ei8.setEnabled(false);
+    }
 
     protected class CredentialsDialog extends JDialog {
         public JTextField domainField;
@@ -580,50 +701,487 @@ class ShowWindow extends JFrame {
         public JLabel[] columnName;
         public JTextField[] input;
         public JButton submitButton,closeButton;
+        private RunStatement subRunStmt;
         private final DefaultTableModel model;
+        private HashMap<String,String> hashmapPat,hashmapMed,hashmapDepar,hashmapDoc;
 
-        public InputDialog(DefaultTableModel model) {
-            this.model = model;
-            showInputDialog();
+        public InputDialog(DefaultTableModel model){
+            super(ShowWindow.this,"输入窗口1",true);
+            this.model=model;
         }
 
-        public void showInputDialog(){
-            int count=model.getColumnCount();
-            setLayout(new BorderLayout(10,10));
+        public InputDialog(DefaultTableModel model,RunStatement subRunStmt) {
+            super(ShowWindow.this,"输入窗口2",true);
+            this.model = model;
+            this.subRunStmt=subRunStmt;
+        }
 
+        public void showInputDialog(int mode) throws SQLException {
+            /*mode1->开药方   mode2->直接添加  mode3->入库   mode4->出库   mode5->开账单  mode6->添加药品数据   mode7->患者信息维护
+            mode8->医生信息维护
+            */
+            if (mode==1){
+                String[] patientIDs= getPatientName();
+                String[] medicineIDs=getMedicineName();
 
-            tip=new JLabel("请输入数值");
-            tip.setHorizontalTextPosition(SwingConstants.CENTER);
-            add(tip,BorderLayout.NORTH);
+                tip=new JLabel("请输入数值");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
 
-            JPanel infoPanel=new JPanel();
-            infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
-            columnName=new JLabel[count];
-            input=new JTextField[count];
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
 
-            for (int i=0;i<count;i++){
-                columnName[i]=new JLabel(model.getColumnName(i));
-                input[i]=new JTextField(15);
+                JLabel patientLabel=new JLabel("患者名");
+                JComboBox<String> patientComboBox=new JComboBox<>(patientIDs);
+                JLabel medicinesLabel=new JLabel("药品");
+                JComboBox<String> medicinesComboBox=new JComboBox<>(medicineIDs);
+                JLabel amount=new JLabel("数量");
+                JTextField countInput =new JTextField(3);
 
-                infoPanel.add(columnName[i]);
-                infoPanel.add(input[i]);
+                infoPanel.add(patientLabel);    infoPanel.add(patientComboBox);
+                infoPanel.add(medicinesLabel);  infoPanel.add(medicinesComboBox);
+                infoPanel.add(amount);  infoPanel.add(countInput);
+
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel = new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel, BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(null);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+                submitButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if (countInput.getText().isEmpty()){
+                            JOptionPane.showMessageDialog(ShowWindow.InputDialog.this,"错误，数量不得为空");
+                        }else {
+                            try {
+                                String sql="INSERT INTO prescription(patient_id,medicine,date,amount) VALUES('"+hashmapPat.get((String)patientComboBox.getSelectedItem())+"','"
+                                        +hashmapMed.get((String) medicinesComboBox.getSelectedItem())+"',NOW(),'"+countInput.getText()+"')";
+                                if (subRunStmt.getStmt().executeUpdate(sql)==1){
+                                    JOptionPane.showMessageDialog(ShowWindow.InputDialog.this,"成功");
+                                }else {
+                                    JOptionPane.showMessageDialog(ShowWindow.InputDialog.this,"失败");
+                                }
+                            } catch (SQLException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+
+                    }
+                });
+
+                this.setVisible(true);
             }
-            add(infoPanel,BorderLayout.CENTER);
+            else if (mode==2){
+                int count=model.getColumnCount();
+                setLayout(new BorderLayout(10,10));
 
-            JPanel buttonPanel=new JPanel();
-            buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
-            submitButton = new JButton("提交");
-            closeButton = new JButton("关闭");
-            buttonPanel.add(submitButton);
-            buttonPanel.add(closeButton);
-            add(buttonPanel,BorderLayout.SOUTH);
 
-            setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            setResizable(false);
-            pack();
-            setLocationRelativeTo(ShowWindow.this);
+                tip=new JLabel("请输入数值");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
 
-            this.setVisible(true);
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+                columnName=new JLabel[count];
+                input=new JTextField[count];
+
+                for (int i=0;i<count;i++){
+                    columnName[i]=new JLabel(model.getColumnName(i));
+                    input[i]=new JTextField(15);
+
+                    infoPanel.add(columnName[i]);
+                    infoPanel.add(input[i]);
+                }
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel=new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel,BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(ShowWindow.this);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                this.setVisible(true);
+            }
+            else if (mode==3){
+                setLayout(new BorderLayout(10,10));
+
+                tip=new JLabel("请输入入库数值");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
+
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+                columnName=new JLabel[2];
+                input=new JTextField[2];
+
+                columnName[0]=new JLabel("药品批准文号");
+                input[0]=new JTextField(15);
+
+                columnName[1]=new JLabel("数量");
+                input[1]=new JTextField(5);
+
+                infoPanel.add(columnName[0]);   infoPanel.add(input[0]);
+                infoPanel.add(columnName[1]);   infoPanel.add(input[1]);
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel=new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel,BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(ShowWindow.this);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                setVisible(true);
+
+
+            }
+            else if (mode==4){
+                String[] medicines=getMedicineName();
+                String[] departments=getDepartmentName();
+
+                tip=new JLabel("请输入出库数值");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
+
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+
+                JLabel medicinesLabel=new JLabel("药品");
+                JComboBox<String> medicinesComboBox=new JComboBox<>(medicines);
+                JLabel amount=new JLabel("数量");
+                JTextField countInput =new JTextField(3);
+                JComboBox<String> departmentComboBox=new JComboBox<>(departments);
+                JLabel target=new JLabel("到科室");
+
+                infoPanel.add(medicinesLabel);  infoPanel.add(medicinesComboBox);
+                infoPanel.add(amount);  infoPanel.add(countInput);
+                infoPanel.add(target);    infoPanel.add(departmentComboBox);
+
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel = new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel, BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(null);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                this.setVisible(true);
+            }
+            else if(mode==5){
+                String[] patients= getPatientName();
+                setLayout(new BorderLayout(10,10));
+
+                tip=new JLabel("请输入收款数量");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
+
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+                columnName=new JLabel[2];
+
+                columnName[0]=new JLabel("患者名");
+                JComboBox<String> patientComboBox=new JComboBox<>(patients);
+
+                columnName[1]=new JLabel("元");
+                JTextField input=new JTextField(5);
+
+                infoPanel.add(columnName[0]);   infoPanel.add(patientComboBox);
+                infoPanel.add(input);    infoPanel.add(columnName[1]);
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel=new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel,BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(ShowWindow.this);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                setVisible(true);
+
+
+            }
+            else if (mode == 6) {
+                String[] medicineIDs=getMedicineName();     //TODO
+                String[] types={"非处方药","处方药","其他"};
+
+                tip=new JLabel("请输入数值");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
+
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+
+                JLabel medicinesLabel=new JLabel("药品");
+                JComboBox<String> medicinesComboBox=new JComboBox<>(medicineIDs);
+                JLabel price=new JLabel("价格");
+                JTextField priceInput =new JTextField(7);
+                JLabel typeLabel=new JLabel("药物种类");
+                JComboBox<String> typeComboBox=new JComboBox<>(types);
+
+                infoPanel.add(medicinesLabel);  infoPanel.add(medicinesComboBox);
+                infoPanel.add(price);  infoPanel.add(priceInput);
+                infoPanel.add(typeLabel);   infoPanel.add(typeComboBox);
+
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel = new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel, BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(null);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                this.setVisible(true);
+            }
+            else if (mode == 7) {
+                String[] patients= getPatientName();
+                String[] doctors=getDoctorName();
+                String[] sex={"男","女","?"};
+                setLayout(new BorderLayout(10,10));
+
+                tip=new JLabel("请输入患者数值");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
+
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+                columnName=new JLabel[4];
+
+                columnName[0]=new JLabel("患者名");
+                JComboBox<String> patientComboBox=new JComboBox<>(patients);
+                columnName[1]=new JLabel("主治医师名");
+                JComboBox<String> doctorComboBox=new JComboBox<>(doctors);
+                columnName[2]=new JLabel("性别");
+                JComboBox<String> sexComboBox=new JComboBox<>(sex);
+//                columnName[3]=new JLabel("入院日期");
+                infoPanel.add(columnName[0]);   infoPanel.add(patientComboBox);
+                infoPanel.add(columnName[1]);    infoPanel.add(doctorComboBox);
+                infoPanel.add(columnName[2]);   infoPanel.add(sexComboBox);
+
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel=new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel,BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(ShowWindow.this);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                setVisible(true);
+
+
+            }
+            else if(mode==8){
+                String[] departments= getDepartmentName();
+                setLayout(new BorderLayout(10,10));
+
+                tip=new JLabel("请输入医生信息");
+                tip.setHorizontalTextPosition(SwingConstants.CENTER);
+                add(tip,BorderLayout.NORTH);
+
+                JPanel infoPanel=new JPanel();
+                infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
+                columnName=new JLabel[3];
+
+                columnName[0]=new JLabel("所属科室名");
+                JComboBox<String> departmentComboBox=new JComboBox<>(departments);
+
+                columnName[1]=new JLabel("医生名");
+                JTextField input=new JTextField(5);
+
+                columnName[2]=new JLabel("医生ID");
+                JTextField input2=new JTextField(5);
+
+                infoPanel.add(columnName[2]);   infoPanel.add(input2);
+                infoPanel.add(columnName[1]);   infoPanel.add(input);
+                infoPanel.add(columnName[0]);   infoPanel.add(departmentComboBox);
+                add(infoPanel,BorderLayout.CENTER);
+
+                JPanel buttonPanel=new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER,10,10));
+                submitButton = new JButton("提交");
+                closeButton = new JButton("关闭");
+                buttonPanel.add(submitButton);
+                buttonPanel.add(closeButton);
+                add(buttonPanel,BorderLayout.SOUTH);
+
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                pack();
+                setLocationRelativeTo(ShowWindow.this);
+
+                closeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        setVisible(false);
+                    }
+                });
+
+                setVisible(true);
+            }
+        }
+
+        private String[] getPatientName() throws SQLException {
+            hashmapPat=new HashMap<>();
+            DefaultTableModel PatientResult=new DefaultTableModel();
+            ParseResult subResult=new ParseResult("patient",null,PatientResult, subRunStmt.getStmt());
+            subResult.query();
+            int rowCount=PatientResult.getRowCount();
+            String[] patientIDs=new String[rowCount];
+            int index=PatientResult.findColumn("fname");
+            int IDindex=PatientResult.findColumn("ID");
+
+            for (int i=0;i<rowCount;i++){
+                String name=PatientResult.getValueAt(i,index).toString();
+                String id=PatientResult.getValueAt(i,IDindex).toString();
+                patientIDs[i]=name;
+                hashmapPat.put(name,id);
+            }
+
+            return patientIDs;
+        }
+        private String[] getMedicineName() throws SQLException{
+            hashmapMed=new HashMap<>();
+            DefaultTableModel medicineResult=new DefaultTableModel();
+            ParseResult subResult=new ParseResult("med",null,medicineResult, subRunStmt.getStmt());
+            subResult.query();
+            int rowCount=medicineResult.getRowCount();
+            String[] medicines=new String[rowCount];
+            int index=medicineResult.findColumn("fname");
+            int IDindex=medicineResult.findColumn("aname");
+
+            for (int i=0;i<rowCount;i++){
+                String name=medicineResult.getValueAt(i,index).toString();
+                String ID=medicineResult.getValueAt(i,IDindex).toString();
+                medicines[i]=name;
+                hashmapMed.put(name,ID);
+            }
+
+            return medicines;
+        }
+        private String[] getDepartmentName() throws SQLException{
+            DefaultTableModel DepartmentResult =new DefaultTableModel();
+            ParseResult subResult=new ParseResult("department",null, DepartmentResult, subRunStmt.getStmt());
+            subResult.query();
+            int rowCount= DepartmentResult.getRowCount();
+            String[] patientIDs=new String[rowCount];
+            int index= DepartmentResult.findColumn("fname");
+
+            for (int i=0;i<rowCount;i++){
+                patientIDs[i]= DepartmentResult.getValueAt(i,index).toString();
+            }
+
+            return patientIDs;
+        }
+        private String[] getDoctorName() throws SQLException{
+            DefaultTableModel DoctorResult =new DefaultTableModel();
+            ParseResult subResult=new ParseResult("doc",null, DoctorResult, subRunStmt.getStmt());
+            subResult.query();
+            int rowCount= DoctorResult.getRowCount();
+            String[] doctors=new String[rowCount];
+            int index= DoctorResult.findColumn("fname");
+
+            for (int i=0;i<rowCount;i++){
+                doctors[i]= DoctorResult.getValueAt(i,index).toString();
+            }
+
+            return doctors;
         }
     }
 
