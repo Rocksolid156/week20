@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Frontend {
@@ -106,7 +107,7 @@ public class Frontend {
         sw.ei1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1,command);
+                sw.ipd=sw.new InputDialog(tableModel1,command,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(1);
                 } catch (SQLException ex) {
@@ -119,7 +120,7 @@ public class Frontend {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //TODO
-                sw.ipd=sw.new InputDialog(tableModel1);
+                sw.ipd=sw.new InputDialog(tableModel1,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(2);
                 } catch (SQLException ex) {
@@ -130,7 +131,7 @@ public class Frontend {
         sw.ei3.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1);
+                sw.ipd=sw.new InputDialog(tableModel1,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(3);
                 } catch (SQLException ex) {
@@ -141,7 +142,7 @@ public class Frontend {
         sw.ei4.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1,command);
+                sw.ipd=sw.new InputDialog(tableModel1,command,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(4);
                 } catch (SQLException ex) {
@@ -152,7 +153,7 @@ public class Frontend {
         sw.ei5.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1,command);
+                sw.ipd=sw.new InputDialog(tableModel1,command,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(5);
                 } catch (SQLException ex) {
@@ -163,7 +164,7 @@ public class Frontend {
         sw.ei6.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1,command);
+                sw.ipd=sw.new InputDialog(tableModel1,command,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(6);
                 } catch (SQLException ex) {
@@ -174,7 +175,7 @@ public class Frontend {
         sw.ei7.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1,command);
+                sw.ipd=sw.new InputDialog(tableModel1,command,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(7);
                 } catch (SQLException ex) {
@@ -185,7 +186,7 @@ public class Frontend {
         sw.ei8.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sw.ipd=sw.new InputDialog(tableModel1,command);
+                sw.ipd=sw.new InputDialog(tableModel1,command,Frontend.this);
                 try {
                     sw.ipd.showInputDialog(8);
                 } catch (SQLException ex) {
@@ -435,7 +436,7 @@ public class Frontend {
         sw.repaint();
     }
 
-    private void tryDraw(String tablename){
+    public void tryDraw(String tablename){
         ParseResult result;
         try {
             command=new RunStatement(sqlconn.getConn());
@@ -462,7 +463,6 @@ public class Frontend {
 }
 
 class ShowWindow extends JFrame {
-    boolean noCloseFlag = true;
 
     JMenuItem mi1, mi2, mi3;
     JMenu fi1;
@@ -477,6 +477,13 @@ class ShowWindow extends JFrame {
     InitDBDialog idb;
     DrawInfo info;
     InputDialog ipd;
+    WindowAdapter noCLose=new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e) {
+            JOptionPane.showMessageDialog(ShowWindow.this, "关闭按钮已被禁用，请断开连接再关闭", "提示", JOptionPane.WARNING_MESSAGE);
+        }
+    };
+
 
     public ShowWindow() {
         super("Simple DB Query Frontend By 2211110209");
@@ -554,29 +561,25 @@ class ShowWindow extends JFrame {
     }
 
     public void setCloseButtonEnable(int status) {
+
         if (status == 1) {
             mi2.setEnabled(true);
             mi3.setEnabled(true);
             fi1.setEnabled(true);
+            if (this.getWindowListeners().length==0)
+                this.addWindowListener(noCLose);
             this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-            this.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    JOptionPane.showMessageDialog(ShowWindow.this, "关闭按钮已被禁用，请断开连接再关闭", "提示", JOptionPane.WARNING_MESSAGE);
-                    noCloseFlag = false;
-                }
-            });
             ai1.setEnabled(true);
+
         } else if (status == 0) {
             mi2.setEnabled(false);
             mi3.setEnabled(false);
             fi1.setEnabled(false);
+            if (this.getWindowListeners().length!=0)
+                this.removeWindowListener(noCLose);
             this.setDefaultCloseOperation(EXIT_ON_CLOSE);
             ai1.setEnabled(false);
-            if (!noCloseFlag) {
-                this.removeWindowListener(this.getWindowListeners()[0]);
-                noCloseFlag = true;
-            }
+
         }
     }
 
@@ -704,16 +707,19 @@ class ShowWindow extends JFrame {
         private RunStatement subRunStmt;
         private final DefaultTableModel model;
         private HashMap<String,String> hashmapPat,hashmapMed,hashmapDepar,hashmapDoc;
+        private Frontend frontend;
 
-        public InputDialog(DefaultTableModel model){
+        public InputDialog(DefaultTableModel model,Frontend frontend){
             super(ShowWindow.this,"输入窗口1",true);
             this.model=model;
+            this.frontend=frontend;
         }
 
-        public InputDialog(DefaultTableModel model,RunStatement subRunStmt) {
+        public InputDialog(DefaultTableModel model,RunStatement subRunStmt,Frontend frontend) {
             super(ShowWindow.this,"输入窗口2",true);
             this.model = model;
             this.subRunStmt=subRunStmt;
+            this.frontend=frontend;
         }
 
         public void showInputDialog(int mode) throws SQLException {
@@ -774,9 +780,11 @@ class ShowWindow extends JFrame {
                                         +hashmapMed.get((String) medicinesComboBox.getSelectedItem())+"',NOW(),'"+countInput.getText()+"')";
                                 if (subRunStmt.getStmt().executeUpdate(sql)==1){
                                     JOptionPane.showMessageDialog(ShowWindow.InputDialog.this,"成功");
+                                    frontend.tryDraw("View_Chinese_Prescription");
                                 }else {
                                     JOptionPane.showMessageDialog(ShowWindow.InputDialog.this,"失败");
                                 }
+
                             } catch (SQLException ex) {
                                 throw new RuntimeException(ex);
                             }

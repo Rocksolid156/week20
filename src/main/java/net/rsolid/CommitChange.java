@@ -1,5 +1,6 @@
 package net.rsolid;
 
-public class CommitChange {
+import javax.swing.*;
+import java.sql.SQLException;
 
-}
+
