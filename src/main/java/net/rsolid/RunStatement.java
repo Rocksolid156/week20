@@ -1,10 +1,12 @@
 package net.rsolid;
 
+import javax.swing.table.DefaultTableModel;
 import java.sql.*;
+import java.util.HashMap;
 
 public class RunStatement {
-    Statement stmt;
-    Connection conn;
+    private Statement stmt;
+    private Connection conn;
     public RunStatement(Connection conn) throws SQLException {
         this.conn=conn;
         stmt=conn.createStatement();
@@ -12,14 +14,12 @@ public class RunStatement {
 
     public void initDB() throws SQLException {
         String DBmedicine="CREATE TABLE `med` (\n" +
-//                "  `id` int NOT NULL AUTO_INCREMENT,\n"+
                 "  `aname` varchar(10) NOT NULL COMMENT '药品批准文号',\n" +
                 "  `fname` varchar(25) COMMENT '药品全名',\n" +
                 "  `price` DECIMAL(10,2) COMMENT '价格',\n" +
                 "  `count` int DEFAULT 0 COMMENT '库存',\n" +
                 "  `type`  int DEFAULT 0 COMMENT '类型',\n"+
                 "  PRIMARY KEY (`aname`)\n"+
-//                "  UNIQUE  KEY `aname` (`aname`)"+
                 ")";
         String DBdepartment="CREATE TABLE `department` (\n" +
                 "  `dname` VARCHAR (5) PRIMARY KEY COMMENT '科室号',\n" +
@@ -130,21 +130,21 @@ public class RunStatement {
                 "    department;\n";
         String view4="CREATE VIEW View_Chinese_Import AS\n" +
                 "SELECT \n" +
-                "    ID AS 入库ID,\n" +
-                "    aname AS 药品批准文号,\n" +
-                "    date AS 入库日期,\n" +
-                "    count AS 入库数量\n" +
+                "    imp.ID AS 入库ID,\n" +
+                "    med.fname AS 药品,\n" +
+                "    imp.date AS 入库日期,\n" +
+                "    imp.count AS 入库数量\n" +
                 "FROM \n" +
-                "    imp;\n";
+                "    imp,med WHERE imp.aname=med.aname ORDER BY imp.ID DESC;\n";
         String view5="CREATE VIEW View_Chinese_Export AS\n" +
                 "SELECT \n" +
-                "    ID AS 出库ID,\n" +
-                "    aname AS 药品批准文号,\n" +
-                "    target AS 出库目标科室,\n" +
-                "    date AS 出库日期,\n" +
-                "    count AS 出库数量\n" +
+                "    export.ID AS 出库ID,\n" +
+                "    med.fname AS 药品,\n" +
+                "    export.target AS 出库目标科室,\n" +
+                "    export.date AS 出库日期,\n" +
+                "    export.count AS 出库数量\n" +
                 "FROM \n" +
-                "    export;\n";
+                "    export,med WHERE export.aname=med.aname ORDER BY export.ID DESC;\n";
         String view6="CREATE VIEW View_Chinese_Doctor AS\n" +
                 "SELECT \n" +
                 "    docid AS 医生ID号,\n" +
@@ -155,30 +155,34 @@ public class RunStatement {
         String view7="CREATE VIEW View_Chinese_Patient AS\n" +
                 "SELECT \n" +
                 "    ID AS 患者ID号,\n" +
-                "    fname AS 患者全名,\n" +
+                "    patient.fname AS 患者全名,\n" +
                 "    doc AS 主治医师ID,\n" +
+                "    doc.fname AS 医生名,\n"   +
                 "    sex AS 性别,\n" +
                 "    intime AS 入院日期,\n" +
                 "    outtime AS 出院日期\n" +
                 "FROM \n" +
-                "    patient;\n";
+                "    patient,doc WHERE doc.docid=patient.doc ORDER BY ID DESC;\n";
         String view8="CREATE VIEW View_Chinese_Prescription AS\n" +
                 "SELECT \n" +
-                "    ID AS 处方ID,\n" +
-                "    patient_id AS 患者ID,\n" +
-                "    medicine AS 药品批准文号,\n" +
-                "    date AS 处方日期,\n" +
-                "    amount AS 处方数量\n" +
+                "    prescription.ID AS 处方ID,\n" +
+                "    prescription.patient_id AS 患者ID,\n" +
+                "    patient.fname AS 患者全名,\n" +
+                "    prescription.medicine AS 药品批准文号,\n" +
+                "    med.fname AS 药品名,\n" +
+                "    prescription.date AS 处方日期,\n" +
+                "    prescription.amount AS 处方数量\n" +
                 "FROM \n" +
-                "    prescription;\n";
+                "    prescription,patient,med WHERE patient.ID=prescription.patient_id AND med.aname=prescription.medicine ORDER BY prescription.ID DESC;\n";
         String view9="CREATE VIEW View_Chinese_Billing AS\n" +
                 "SELECT \n" +
-                "    ID AS 账单ID,\n" +
-                "    patient_id AS 患者ID,\n" +
-                "    amount AS 账单金额,\n" +
-                "    date AS 账单日期\n" +
+                "    billing.ID AS 账单ID,\n" +
+                "    billing.patient_id AS 患者ID,\n" +
+                "    patient.fname AS 患者全名,\n" +
+                "    billing.amount AS 账单金额,\n" +
+                "    billing.date AS 账单日期\n" +
                 "FROM \n" +
-                "    billing;\n";
+                "    billing,patient WHERE patient.ID=billing.ID ORDER BY billing.ID DESC;\n";
         String[] precompiled={trigger_in,trigger_out,procedure,view1,view2,view3,view4,view5,view6,view7,view8,view9};
         for (String tableSQL:tables){
             try {
@@ -251,5 +255,48 @@ public class RunStatement {
     }
     public Statement getStmt(){
         return stmt;
+    }
+
+    public String[] getNameSet(String tablename, Connection conn) throws SQLException{
+        DefaultTableModel Result =new DefaultTableModel();
+        RunStatement subStmt=new RunStatement(conn);
+        ParseResult subResult=new ParseResult(tablename,null, Result, subStmt.getStmt());
+        subResult.query();
+        int rowCount= Result.getRowCount();
+        String[] fullNames =new String[rowCount];
+        int index= Result.findColumn("fname");
+
+        for (int i=0;i<rowCount;i++){
+            fullNames[i]= Result.getValueAt(i,index).toString();
+        }
+
+        return fullNames;
+    }
+    public String[] getNameSet(String tablename, Connection conn, HashMap<String,String> hashMap) throws SQLException {
+        hashMap=new HashMap<>();
+        DefaultTableModel PatientResult=new DefaultTableModel();
+        RunStatement subStmt=new RunStatement(conn);
+        ParseResult subResult=new ParseResult("patient",null,PatientResult, subStmt.getStmt());
+        subResult.query();
+        int rowCount=PatientResult.getRowCount();
+        String[] IDs=new String[rowCount];
+        int index=PatientResult.findColumn("fname");
+        int IDindex;
+        if (PatientResult.findColumn("ID")!=-1)
+            IDindex=PatientResult.findColumn("ID");
+        else if (PatientResult.findColumn("aname")!=-1) {
+            IDindex=PatientResult.findColumn("aname");
+        }else {
+            IDindex=-1;
+        }
+
+        for (int i=0;i<rowCount;i++){
+            String name=PatientResult.getValueAt(i,index).toString();
+            String id=PatientResult.getValueAt(i,IDindex).toString();
+            IDs[i]=name;
+            hashMap.put(name,id);
+        }
+
+        return IDs;
     }
 }

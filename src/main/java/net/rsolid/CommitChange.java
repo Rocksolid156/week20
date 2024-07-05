@@ -1,6 +1,10 @@
 package net.rsolid;
 
-import javax.swing.*;
-import java.sql.SQLException;
 
+public class CommitChange {
+    Frontend frontend;
 
+    public CommitChange(Frontend frontend){
+        this.frontend=frontend;
+    }
+}
