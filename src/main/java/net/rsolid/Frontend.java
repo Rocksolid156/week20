@@ -9,6 +9,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class Frontend {
     private final ShowWindow sw;
@@ -470,8 +472,12 @@ public class Frontend {
             mode8->医生信息维护
         */
         if (mode==1){
-            String[] patientIDs= statement.getNameSet("patient", sqlconn.getConn(),sw.ipd.hashmapPat);
-            String[] medicineIDs=statement.getNameSet("med", sqlconn.getConn(),sw.ipd.hashmapMed);
+            sw.ipd.hashmapPat=new HashMap<>();
+            sw.ipd.hashmapMed=new HashMap<>();
+            GetNameset gns=new GetNameset(sqlconn.getConn());
+            String[] patientNames= gns.getNameSet("patient", sqlconn.getConn(),sw.ipd.hashmapPat,1);
+            gns=new GetNameset(sqlconn.getConn());
+            String[] medicineNames=gns.getNameSet("med", sqlconn.getConn(),sw.ipd.hashmapMed,1);
 
             tip=new JLabel("请输入数值");
             tip.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -481,9 +487,9 @@ public class Frontend {
             infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
 
             JLabel patientLabel=new JLabel("患者名");
-            JComboBox<String> patientComboBox=new JComboBox<>(patientIDs);
+            JComboBox<String> patientComboBox=new JComboBox<>(patientNames);
             JLabel medicinesLabel=new JLabel("药品");
-            JComboBox<String> medicinesComboBox=new JComboBox<>(medicineIDs);
+            JComboBox<String> medicinesComboBox=new JComboBox<>(medicineNames);
             JLabel amount=new JLabel("数量");
             JTextField countInput =new JTextField(3);
 
@@ -515,13 +521,15 @@ public class Frontend {
             submitButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (countInput.getText().isEmpty()){
-                        JOptionPane.showMessageDialog(sw.ipd,"错误，数量不得为空");
-                    }else {
+                    if (countInput.getText().isEmpty()||patientComboBox.getSelectedItem()==null||medicinesComboBox.getSelectedItem()==null){
+                        JOptionPane.showMessageDialog(sw.ipd,"错误，数值不得为空");
+                    } else if (!Utils.isInteger(countInput.getText())||Integer.parseInt(countInput.getText())<0) {
+                        JOptionPane.showMessageDialog(sw.ipd,"错误，数量不合法");
+                    } else {
                         try {
                             String sql="INSERT INTO prescription(patient_id,medicine,date,amount) VALUES('"+sw.ipd.hashmapPat.get((String)patientComboBox.getSelectedItem())+"','"
                                     +sw.ipd.hashmapMed.get((String) medicinesComboBox.getSelectedItem())+"',NOW(),'"+countInput.getText()+"')";
-                            if (sw.ipd.subRunStmt.getStmt().executeUpdate(sql)==1){
+                            if (statement.getStmt().executeUpdate(sql)==1){
                                 JOptionPane.showMessageDialog(sw.ipd,"成功");
                                 tryDraw("View_Chinese_Prescription");
                             }else {
@@ -580,6 +588,27 @@ public class Frontend {
                     dialog.setVisible(false);
                 }
             });
+            submitButton.addActionListener(e->{
+                if (input[0].getText().isEmpty()){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，名字不得为空");
+                }else if (input[0].getText().length()>5){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，名字过长");
+                }else {
+                    try {
+                        String sql="INSERT INTO department VALUES('"+input[0].getText()+"','"
+                                +input[1].getText()+"')";
+                        if (statement.getStmt().executeUpdate(sql)==1){
+                            JOptionPane.showMessageDialog(sw.ipd,"成功");
+                            tryDraw("View_Chinese_Department");
+                        }else {
+                            JOptionPane.showMessageDialog(sw.ipd,"失败");
+                        }
+
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
 
             dialog.setVisible(true);
         }
@@ -624,14 +653,39 @@ public class Frontend {
                     dialog.setVisible(false);
                 }
             });
+            submitButton.addActionListener(e->{
+            if (input[0].getText().isEmpty()){
+                JOptionPane.showMessageDialog(sw.ipd,"错误，名字不得为空");
+            }else if (!Utils.isanameIllegal(input[0].getText())){
+                JOptionPane.showMessageDialog(sw.ipd,"错误，名字不合法");
+            } else if (!Utils.isInteger(input[1].getText())||Integer.parseInt(input[1].getText())<=0) {
+                JOptionPane.showMessageDialog(sw.ipd,"错误，数字不合法");
+            } else {
+                try {
+                    String sql="INSERT INTO imp(aname,count,date) VALUES('"+input[0].getText()+"','"
+                            +input[1].getText()+"',NOW())";
+                    if (statement.getStmt().executeUpdate(sql)==1){
+                        JOptionPane.showMessageDialog(sw.ipd,"成功,请选定药品维护添加更多数据");
+                        tryDraw("View_Chinese_Medicine");
+                    }else {
+                        JOptionPane.showMessageDialog(sw.ipd,"失败");
+                    }
+
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            });
 
             dialog.setVisible(true);
-
-
         }
         else if (mode==4){
-            String[] medicines=statement.getNameSet("med", sqlconn.getConn(),sw.ipd.hashmapMed);
-            String[] departments=statement.getNameSet("department", sqlconn.getConn());
+            sw.ipd.hashmapMed=new HashMap<>();
+            sw.ipd.hashmapDepar=new HashMap<>();
+            GetNameset gns=new GetNameset(sqlconn.getConn());
+            String[] medicines=gns.getNameSet("med", sqlconn.getConn(),sw.ipd.hashmapMed,1);
+            gns=new GetNameset(sqlconn.getConn());
+            String[] departments=gns.getNameSet("department", sqlconn.getConn(),sw.ipd.hashmapDepar,1);
 
             tip=new JLabel("请输入出库数值");
             tip.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -672,11 +726,35 @@ public class Frontend {
                     dialog.setVisible(false);
                 }
             });
+            submitButton.addActionListener(e->{
+                if (!Utils.isInteger(countInput.getText())||Integer.parseInt(countInput.getText())<=0){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，不是合法数字");
+                } else if (medicinesComboBox.getSelectedItem() == null||departmentComboBox.getSelectedItem()==null) {
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，有数值是空的");
+                } else {
+                    try {
+                        String sql="INSERT INTO export(aname,target,date,count) VALUES('"+sw.ipd.hashmapMed.get((String) medicinesComboBox.getSelectedItem())+"','"
+                                +sw.ipd.hashmapDepar.get((String) departmentComboBox.getSelectedItem())+"',NOW(),'"+countInput.getText()+"')";
+                        if (statement.getStmt().executeUpdate(sql)==1){
+                            JOptionPane.showMessageDialog(sw.ipd,"成功");
+                            tryDraw("View_Chinese_Medicine");
+                        }else {
+                            JOptionPane.showMessageDialog(sw.ipd,"失败");
+                        }
+
+                    } catch (SQLException ex) {
+                        if (Objects.equals(ex.getSQLState(), "45000"))
+                            JOptionPane.showMessageDialog(sw.ipd,"失败，"+ex.getLocalizedMessage());
+                    }
+                }
+            });
 
             dialog.setVisible(true);
         }
         else if(mode==5){
-            String[] patients= statement.getNameSet("patient", sqlconn.getConn(),sw.ipd.hashmapPat);
+            sw.ipd.hashmapPat=new HashMap<>();
+            GetNameset gns=new GetNameset(sqlconn.getConn());
+            String[] patients= gns.getNameSet("patient", sqlconn.getConn(),sw.ipd.hashmapPat,1);
             dialog.setLayout(new BorderLayout(10,10));
 
             tip=new JLabel("请输入收款数量");
@@ -716,13 +794,36 @@ public class Frontend {
                     dialog.setVisible(false);
                 }
             });
+            submitButton.addActionListener(e->{
 
+                if (!Utils.isInteger(input_o.getText())||Integer.parseInt(input_o.getText())<=0){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，不是合法数字");
+                } else if (patientComboBox.getSelectedItem() == null) {
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，有数值是空的");
+                } else {
+                    try {
+                        String sql="INSERT INTO billing(patient_id,amount,date) VALUES('"+sw.ipd.hashmapPat.get((String) patientComboBox.getSelectedItem())+"','"
+                                +input_o.getText()+"',NOW())";
+                        if (statement.getStmt().executeUpdate(sql)==1){
+                            JOptionPane.showMessageDialog(sw.ipd,"成功");
+                            tryDraw("View_Chinese_Billing");
+                        }else {
+                            JOptionPane.showMessageDialog(sw.ipd,"失败");
+                        }
+
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
             dialog.setVisible(true);
 
 
         }
         else if (mode == 6) {
-            String[] medicines=statement.getNameSet("med", sqlconn.getConn(),sw.ipd.hashmapMed);
+            sw.ipd.hashmapMed=new HashMap<>();
+            GetNameset gns=new GetNameset(sqlconn.getConn());
+            String[] medicines=gns.getNameSet("med", sqlconn.getConn(),sw.ipd.hashmapMed,2);
             String[] types={"非处方药","处方药","其他"};
 
             tip=new JLabel("请输入数值");
@@ -732,14 +833,17 @@ public class Frontend {
             JPanel infoPanel=new JPanel();
             infoPanel.setLayout(new FlowLayout(FlowLayout.LEFT,10,10));
 
-            JLabel medicinesLabel=new JLabel("药品");
+            JLabel anameLabel=new JLabel("批准文号");
             JComboBox<String> medicinesComboBox=new JComboBox<>(medicines);
+            JLabel fullnameLabel=new JLabel("全名");
+            JTextField nameInput =new JTextField(20);
             JLabel price=new JLabel("价格");
             JTextField priceInput =new JTextField(7);
             JLabel typeLabel=new JLabel("药物种类");
             JComboBox<String> typeComboBox=new JComboBox<>(types);
 
-            infoPanel.add(medicinesLabel);  infoPanel.add(medicinesComboBox);
+            infoPanel.add(anameLabel);  infoPanel.add(medicinesComboBox);
+            infoPanel.add(fullnameLabel);   infoPanel.add(nameInput);
             infoPanel.add(price);  infoPanel.add(priceInput);
             infoPanel.add(typeLabel);   infoPanel.add(typeComboBox);
 
@@ -764,12 +868,43 @@ public class Frontend {
                     dialog.setVisible(false);
                 }
             });
+            submitButton.addActionListener(e->{
+                if (nameInput.getText().isEmpty()||priceInput.getText().isEmpty()||medicinesComboBox.getSelectedItem()==null){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，有数值为空");
+                } else if (Utils.isInteger(priceInput.getText()) && Integer.parseInt(priceInput.getText() )< 0) {
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，有数值无效");
+                } else {
+                    try {
+                        String sql1="UPDATE med SET fname='"+nameInput.getText()+"' where aname='"+medicinesComboBox.getSelectedItem()+"'";
+                        String sql2="UPDATE med SET price='"+Integer.parseInt(priceInput.getText())+"' where aname='"+medicinesComboBox.getSelectedItem()+"'";
+                        String sql3="UPDATE med SET TYPE='"+typeComboBox.getSelectedItem()+"' where aname='"+medicinesComboBox.getSelectedItem()+"'";
+                        statement.getStmt().addBatch(sql1); statement.getStmt().addBatch(sql2); statement.getStmt().addBatch(sql3);
+                        int[] updatecCounts=statement.getStmt().executeBatch();
+                        int i=0;
+                        for (int ignored :updatecCounts)
+                            i++;
+                        if (i==3){
+                            JOptionPane.showMessageDialog(sw.ipd,"成功");
+                            tryDraw("View_Chinese_Medicine");
+                        }else {
+                            JOptionPane.showMessageDialog(sw.ipd,"失败");
+                        }
+
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
 
             dialog.setVisible(true);
         }
         else if (mode == 7) {
-            String[] patients= statement.getNameSet("patient", sqlconn.getConn(),sw.ipd.hashmapPat);
-            String[] doctors= statement.getNameSet("doc", sqlconn.getConn());
+            sw.ipd.hashmapPat=new HashMap<>();
+            sw.ipd.hashmapDoc=new HashMap<>();
+            GetNameset gns=new GetNameset(sqlconn.getConn());
+            String[] patients= gns.getNameSet("patient", sqlconn.getConn(),sw.ipd.hashmapPat,1);
+            gns=new GetNameset(sqlconn.getConn());
+            String[] doctors= gns.getNameSet("doc", sqlconn.getConn(),sw.ipd.hashmapDoc,1);
             String[] sex={"男","女","?"};
             dialog.setLayout(new BorderLayout(10,10));
 
@@ -782,13 +917,14 @@ public class Frontend {
             columnName=new JLabel[4];
 
             columnName[0]=new JLabel("患者名");
-            JComboBox<String> patientComboBox=new JComboBox<>(patients);
+//            JComboBox<String> patientComboBox=new JComboBox<>(patients);
+            JTextField patientInput=new JTextField(15);
             columnName[1]=new JLabel("主治医师名");
             JComboBox<String> doctorComboBox=new JComboBox<>(doctors);
             columnName[2]=new JLabel("性别");
             JComboBox<String> sexComboBox=new JComboBox<>(sex);
 //                columnName[3]=new JLabel("入院日期");
-            infoPanel.add(columnName[0]);   infoPanel.add(patientComboBox);
+            infoPanel.add(columnName[0]);   infoPanel.add(patientInput);
             infoPanel.add(columnName[1]);    infoPanel.add(doctorComboBox);
             infoPanel.add(columnName[2]);   infoPanel.add(sexComboBox);
 
@@ -813,13 +949,35 @@ public class Frontend {
                     dialog.setVisible(false);
                 }
             });
+            submitButton.addActionListener(e->{
+                if (patientInput.getText().isEmpty()||doctorComboBox.getSelectedItem()==null){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，有数值为空");
+                }else if (Objects.equals(sexComboBox.getSelectedItem(), "?")){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，性别不合法");
+                } else {
+                    try {
+                        String sql="INSERT INTO patient(fname,doc,sex,intime) VALUES('"+patientInput.getText()+"','"
+                                +sw.ipd.hashmapDoc.get((String) doctorComboBox.getSelectedItem())+"','"+sexComboBox.getSelectedItem()+"',NOW())";
+                        if (statement.getStmt().executeUpdate(sql)==1){
+                            JOptionPane.showMessageDialog(sw.ipd,"成功");
+                            tryDraw("View_Chinese_Patient");
+                        }else {
+                            JOptionPane.showMessageDialog(sw.ipd,"失败");
+                        }
 
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
             dialog.setVisible(true);
 
 
         }
         else if(mode==8){
-            String[] departments= statement.getNameSet("department", sqlconn.getConn());
+            sw.ipd.hashmapDepar=new HashMap<>();
+            GetNameset gns=new GetNameset(sqlconn.getConn());
+            String[] departments= gns.getNameSet("department", sqlconn.getConn(),sw.ipd.hashmapDepar,1);
             dialog.setLayout(new BorderLayout(10,10));
 
             tip=new JLabel("请输入医生信息");
@@ -861,6 +1019,27 @@ public class Frontend {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     dialog.setVisible(false);
+                }
+            });
+            submitButton.addActionListener(e->{
+                if (input_o.getText().isEmpty()||departmentComboBox.getSelectedItem()==null){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，有数值为空");
+                }else if (!Utils.isDocNameIllegal(input2.getText())){
+                    JOptionPane.showMessageDialog(sw.ipd,"错误，ID不合法\n名字要求有五个字符（例如AB123或ABC12）");
+                } else {
+                    try {
+                        String sql="INSERT INTO doc(docid,fname,belong) VALUES('"+input2.getText()+"','"
+                                +input_o.getText()+"','"+sw.ipd.hashmapDepar.get((String) departmentComboBox.getSelectedItem())+"')";
+                        if (statement.getStmt().executeUpdate(sql)==1){
+                            JOptionPane.showMessageDialog(sw.ipd,"成功");
+                            tryDraw("View_Chinese_Doctor");
+                        }else {
+                            JOptionPane.showMessageDialog(sw.ipd,"失败");
+                        }
+
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             });
 
@@ -1119,6 +1298,10 @@ class ShowWindow extends JFrame {
         public InputDialog(DefaultTableModel model){
             super(ShowWindow.this,"输入窗口1",true);
             this.model=model;
+            hashmapPat=new HashMap<>();
+            hashmapMed=new HashMap<>();
+            hashmapDepar=new HashMap<>();
+            hashmapDoc=new HashMap<>();
         }
 
         public InputDialog(DefaultTableModel model,RunStatement subRunStmt) {

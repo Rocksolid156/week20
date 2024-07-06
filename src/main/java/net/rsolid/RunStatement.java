@@ -18,7 +18,7 @@ public class RunStatement {
                 "  `fname` varchar(25) COMMENT '药品全名',\n" +
                 "  `price` DECIMAL(10,2) COMMENT '价格',\n" +
                 "  `count` int DEFAULT 0 COMMENT '库存',\n" +
-                "  `type`  int DEFAULT 0 COMMENT '类型',\n"+
+                "  `type`  VARCHAR(20)  COMMENT '类型',\n"+
                 "  PRIMARY KEY (`aname`)\n"+
                 ")";
         String DBdepartment="CREATE TABLE `department` (\n" +
@@ -51,7 +51,7 @@ public class RunStatement {
                 "  `ID` INT PRIMARY KEY AUTO_INCREMENT COMMENT '患者id号',\n" +
                 "  `fname` VARCHAR (20) COMMENT '患者全名',\n" +
                 "  `doc` VARCHAR (5) COMMENT '主治医师id',\n" +
-                "  `sex` CHAR (6) COMMENT '性别',\n" +
+                "  `sex` CHAR (3) COMMENT '性别',\n" +
                 "  `intime` DATETIME NOT NULL COMMENT '入院日期',\n" +
                 "  `outtime` DATETIME COMMENT '出院日期',\n" +
                 "  FOREIGN KEY (doc) REFERENCES doc(docid)\n" +
@@ -148,10 +148,10 @@ public class RunStatement {
         String view6="CREATE VIEW View_Chinese_Doctor AS\n" +
                 "SELECT \n" +
                 "    docid AS 医生ID号,\n" +
-                "    fname AS 医生全名,\n" +
-                "    belong AS 所属科室\n" +
+                "    doc.fname AS 医生全名,\n" +
+                "    department.fname AS 所属科室\n" +
                 "FROM \n" +
-                "    doc;\n";
+                "    doc,department where doc.belong=department.dname;\n";
         String view7="CREATE VIEW View_Chinese_Patient AS\n" +
                 "SELECT \n" +
                 "    ID AS 患者ID号,\n" +
@@ -257,46 +257,5 @@ public class RunStatement {
         return stmt;
     }
 
-    public String[] getNameSet(String tablename, Connection conn) throws SQLException{
-        DefaultTableModel Result =new DefaultTableModel();
-        RunStatement subStmt=new RunStatement(conn);
-        ParseResult subResult=new ParseResult(tablename,null, Result, subStmt.getStmt());
-        subResult.query();
-        int rowCount= Result.getRowCount();
-        String[] fullNames =new String[rowCount];
-        int index= Result.findColumn("fname");
 
-        for (int i=0;i<rowCount;i++){
-            fullNames[i]= Result.getValueAt(i,index).toString();
-        }
-
-        return fullNames;
-    }
-    public String[] getNameSet(String tablename, Connection conn, HashMap<String,String> hashMap) throws SQLException {
-        hashMap=new HashMap<>();
-        DefaultTableModel PatientResult=new DefaultTableModel();
-        RunStatement subStmt=new RunStatement(conn);
-        ParseResult subResult=new ParseResult("patient",null,PatientResult, subStmt.getStmt());
-        subResult.query();
-        int rowCount=PatientResult.getRowCount();
-        String[] IDs=new String[rowCount];
-        int index=PatientResult.findColumn("fname");
-        int IDindex;
-        if (PatientResult.findColumn("ID")!=-1)
-            IDindex=PatientResult.findColumn("ID");
-        else if (PatientResult.findColumn("aname")!=-1) {
-            IDindex=PatientResult.findColumn("aname");
-        }else {
-            IDindex=-1;
-        }
-
-        for (int i=0;i<rowCount;i++){
-            String name=PatientResult.getValueAt(i,index).toString();
-            String id=PatientResult.getValueAt(i,IDindex).toString();
-            IDs[i]=name;
-            hashMap.put(name,id);
-        }
-
-        return IDs;
-    }
 }

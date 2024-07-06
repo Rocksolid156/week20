@@ -1,11 +1,7 @@
 package net.rsolid;
 
 import javax.swing.table.DefaultTableModel;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
+import java.sql.*;
 
 public class ParseResult {
     String table,sortColumn;
