@@ -14,6 +14,10 @@ public class ParseResult {
         this.tableModel=tableModel;
         this.stmt=stmt;
     }
+    public ParseResult(DefaultTableModel tableModel,Statement stmt){
+        this.tableModel=tableModel;
+        this.stmt=stmt;
+    }
 
     public void query() throws SQLException{
         String sql="SELECT * FROM "+table;
@@ -37,5 +41,22 @@ public class ParseResult {
         }
 
     }
+    public void query(ResultSet rs,DefaultTableModel tableModel) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
 
+        // 获取列名
+        int columnCount = metaData.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            tableModel.addColumn(metaData.getColumnName(i));
+        }
+
+        // 获取数据
+        while (rs.next()) {
+            Object[] rowData=new Object[columnCount];
+            for (int i = 1; i <= columnCount; i++) {
+                rowData[i-1]=rs.getObject(i);
+            }
+            tableModel.addRow(rowData);
+        }
+    }
 }

@@ -1,12 +1,10 @@
 package net.rsolid;
 
-import javax.swing.table.DefaultTableModel;
 import java.sql.*;
-import java.util.HashMap;
 
 public class RunStatement {
-    private Statement stmt;
-    private Connection conn;
+    private final Statement stmt;
+    private final Connection conn;
     public RunStatement(Connection conn) throws SQLException {
         this.conn=conn;
         stmt=conn.createStatement();
@@ -97,16 +95,16 @@ public class RunStatement {
 
         String procedure="CREATE PROCEDURE stats(IN start_date DATE, IN end_date DATE)\n" +
                 "BEGIN\n" +
-                "    SELECT department.dname, COUNT(patient.id) AS 就诊人数\n" +
+                "    SELECT department.dname as 科室号, department.fname as 全名, COUNT(patient.id) AS 就诊人数\n" +
                 "    FROM department\n" +
                 "    JOIN doc ON department.dname = doc.belong\n" +
                 "    JOIN patient ON doc.docid = patient.doc\n" +
                 "    WHERE patient.intime BETWEEN start_date AND end_date\n" +
                 "    GROUP BY department.dname;\n" +
                 "    \n" +
-                "    SELECT export.aname, SUM(export.count) AS 输入情况\n" +
-                "    FROM export\n" +
-                "    WHERE export.date BETWEEN start_date AND end_date\n" +
+                "    SELECT export.aname as 药品批准文号, med.fname as 全名, SUM(export.count) AS 输入情况\n" +
+                "    FROM export,med\n" +
+                "    WHERE export.date BETWEEN start_date AND end_date AND export.aname=med.aname\n" +
                 "    GROUP BY export.aname;\n" +
                 "END;\n";
         String view1="CREATE VIEW medicine_stock AS\n" +
@@ -204,7 +202,7 @@ public class RunStatement {
     }
     public boolean checkExists(String name,int type) throws SQLException {
         DatabaseMetaData meta= conn.getMetaData();
-        ResultSet rs = null;
+        ResultSet rs;
         if(type==1)
             rs=meta.getTables(null,null,name,new String[]{"TABLE"});
         else if (type == 2) {
